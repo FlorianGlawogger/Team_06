@@ -99,5 +99,6 @@
     <string name="title_edit_task">Редактирование задачи</string>
     <string name="save_template">сохранить шаблон</string>
     <string name="template_exists_toast">Шаблон задачи уже существует</string>
+    <string name="menu_item_template">Шаблон</string>
 
 </resources>

@@ -4,12 +4,10 @@ import android.app.AlertDialog.*
 import android.content.Context
 import android.content.DialogInterface
 import android.os.Bundle
-import android.text.Editable
 import android.text.InputType
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.*
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.bundleOf
 import androidx.core.widget.doAfterTextChanged
@@ -45,6 +43,7 @@ class NewTaskFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
+        setHasOptionsMenu(true)
         binding = FragmentNewTaskBinding.inflate(layoutInflater, container, false)
         return binding.root
     }
@@ -59,19 +58,21 @@ class NewTaskFragment : Fragment() {
         taskDescriptionView.doAfterTextChanged { checkTextFilled(view) }
 
         tasksViewModel.currentTask.value.let { task ->
-            if(task != null) {
+            if (task != null) {
                 taskNameView.setText(task.taskName)
                 taskDescriptionView.setText(task.taskDescription)
                 startCalendar.value = task.startTime
                 endCalendar.value = task.endTime
                 workingTaskId = task.id
 
-                (activity as AppCompatActivity).supportActionBar?.title = getString(R.string.title_edit_task)
+                (activity as AppCompatActivity).supportActionBar?.title =
+                    getString(R.string.title_edit_task)
                 binding.taskCreate.text = getString(R.string.action_save_task)
             } else {
                 endCalendar.value?.add(Calendar.HOUR, 1);
 
-                (activity as AppCompatActivity).supportActionBar?.title =  getString(R.string.menu_new_task)
+                (activity as AppCompatActivity).supportActionBar?.title =
+                    getString(R.string.menu_new_task)
                 binding.taskCreate.text = getString(R.string.action_create_task)
             }
         }
@@ -86,28 +87,61 @@ class NewTaskFragment : Fragment() {
             saveTask()
             findNavController().navigateUp()
         }
-        binding.taskSaveTemplate.setOnClickListener {saveTemplate()}
+        binding.taskSaveTemplate.setOnClickListener { saveTemplate() }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.menu_new_task, menu)
+        return super.onCreateOptionsMenu(menu, inflater)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
+        R.id.menu_new_task_template -> showTemplates()
+        else -> super.onOptionsItemSelected(item)
+    }
+
+    private fun showTemplates(): Boolean {
+        val sharedPref = activity?.getPreferences(Context.MODE_PRIVATE) ?: return false
+        val keys = sharedPref.all.keys
+        val keyNames = keys.filter { key -> key.subSequence(0, 9) == "template_" }
+            .map { key -> key.substring(9) }.toTypedArray()
+
+        val alertBuilder = Builder(context)
+        alertBuilder.setTitle("Choose your template")
+
+        alertBuilder.setItems(keyNames) { _, which ->
+            val template = sharedPref.getStringSet("template_${keyNames[which]}", setOf("", ""))
+            binding.taskName.setText(template?.elementAt(0))
+            binding.taskDescription.setText(template?.elementAt(1))
+        }
+
+        val dialog: android.app.AlertDialog = alertBuilder.create()
+        dialog.show()
+        return true
     }
 
     private fun saveTemplate() {
-        val alertBuilder: Builder = Builder(requireContext())
+        val alertBuilder = Builder(requireContext())
         alertBuilder.setTitle("Title")
 
         val input = EditText(requireContext())
         input.inputType = InputType.TYPE_CLASS_TEXT
         alertBuilder.setView(input)
 
-        alertBuilder.setPositiveButton("OK", DialogInterface.OnClickListener { dialog, which ->
-            onTemplateSavedOK(input.text.toString())})
-        alertBuilder.setNegativeButton("Cancel", DialogInterface.OnClickListener { dialog, which -> dialog.cancel() })
+        alertBuilder.setPositiveButton("OK", DialogInterface.OnClickListener { _, _ ->
+            onTemplateSavedOK(input.text.toString())
+        })
+        alertBuilder.setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
 
         alertBuilder.show()
     }
 
     private fun onTemplateSavedOK(title: String) {
         val sharedPref = activity?.getPreferences(Context.MODE_PRIVATE) ?: return
-        val template = mutableSetOf(binding.taskName.text.toString(),
-                binding.taskDescription.text.toString())
+        val template = mutableSetOf(
+            binding.taskName.text.toString(),
+            binding.taskDescription.text.toString()
+        )
         if (!sharedPref.contains("template_$title")) {
             with(sharedPref.edit()) {
                 putStringSet("template_$title", template)
@@ -170,11 +204,11 @@ class NewTaskFragment : Fragment() {
             }
             if (endCalendar.value?.before(cal) ?: return@Observer) {
                 val newEndCal = GregorianCalendar(
-                        startCalendar.value?.get(Calendar.YEAR) ?: return@Observer,
-                        startCalendar.value?.get(Calendar.MONTH) ?: return@Observer,
-                        startCalendar.value?.get(Calendar.DAY_OF_MONTH) ?: return@Observer,
-                        endCalendar.value?.get(Calendar.HOUR_OF_DAY) ?: return@Observer,
-                        endCalendar.value?.get(Calendar.MINUTE) ?: return@Observer
+                    startCalendar.value?.get(Calendar.YEAR) ?: return@Observer,
+                    startCalendar.value?.get(Calendar.MONTH) ?: return@Observer,
+                    startCalendar.value?.get(Calendar.DAY_OF_MONTH) ?: return@Observer,
+                    endCalendar.value?.get(Calendar.HOUR_OF_DAY) ?: return@Observer,
+                    endCalendar.value?.get(Calendar.MINUTE) ?: return@Observer
                 )
                 endCalendar.value = newEndCal
                 binding.taskEndDate.text = formatDate(newEndCal)
@@ -187,11 +221,12 @@ class NewTaskFragment : Fragment() {
             var cal = it ?: return@Observer
             if (cal.before(startCalendar.value)) {
                 val newEndCal = GregorianCalendar(
-                        startCalendar.value?.get(Calendar.YEAR)!!,
-                        startCalendar.value?.get(Calendar.MONTH)!!,
-                        startCalendar.value?.get(Calendar.DAY_OF_MONTH)!!,
-                        endCalendar.value?.get(Calendar.HOUR_OF_DAY)!!,
-                        endCalendar.value?.get(Calendar.MINUTE)!!)
+                    startCalendar.value?.get(Calendar.YEAR)!!,
+                    startCalendar.value?.get(Calendar.MONTH)!!,
+                    startCalendar.value?.get(Calendar.DAY_OF_MONTH)!!,
+                    endCalendar.value?.get(Calendar.HOUR_OF_DAY)!!,
+                    endCalendar.value?.get(Calendar.MINUTE)!!
+                )
                 if (newEndCal.before(startCalendar.value)) {
                     newEndCal.add(Calendar.DAY_OF_YEAR, 1)
                 }
@@ -216,24 +251,24 @@ class NewTaskFragment : Fragment() {
             !(view.findViewById<TextView>(R.id.taskName).text.isBlank() ||
                 view.findViewById<TextView>(R.id.taskDescription).text.isBlank())
         view.findViewById<Button>(R.id.taskSaveTemplate).isEnabled =
-                !(view.findViewById<TextView>(R.id.taskName).text.isBlank() ||
-                        view.findViewById<TextView>(R.id.taskDescription).text.isBlank())
+            !(view.findViewById<TextView>(R.id.taskName).text.isBlank() ||
+                view.findViewById<TextView>(R.id.taskDescription).text.isBlank())
     }
 
     private fun createDateOrTimeBundle(isDate: Boolean, startBundle: Boolean): Bundle {
         val cal = if (startBundle) startCalendar.value else endCalendar.value
         return if (isDate) bundleOf(
-                Pair("YEAR", cal?.get(Calendar.YEAR)),
-                Pair("MONTH", cal?.get(Calendar.MONTH)),
-                Pair("DAY", cal?.get(Calendar.DAY_OF_MONTH)),
-                Pair(
-                        "MIN_DATE",
-                        if (startBundle) System.currentTimeMillis() - 1000
-                        else startCalendar.value?.timeInMillis
-                )
+            Pair("YEAR", cal?.get(Calendar.YEAR)),
+            Pair("MONTH", cal?.get(Calendar.MONTH)),
+            Pair("DAY", cal?.get(Calendar.DAY_OF_MONTH)),
+            Pair(
+                "MIN_DATE",
+                if (startBundle) System.currentTimeMillis() - 1000
+                else startCalendar.value?.timeInMillis
+            )
         ) else bundleOf(
-                Pair("HOUR", cal?.get(Calendar.HOUR_OF_DAY)),
-                Pair("MINUTE", cal?.get(Calendar.MINUTE))
+            Pair("HOUR", cal?.get(Calendar.HOUR_OF_DAY)),
+            Pair("MINUTE", cal?.get(Calendar.MINUTE))
         )
     }
 }
