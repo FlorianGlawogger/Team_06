@@ -97,4 +97,6 @@
 
     <string name="title_edit_task">编辑任务</string>
     <string name="action_save_task">保存任务</string>
+    <string name="save_template">保存模板</string>
+    <string name="template_exists_toast">任务模板已存在</string>
 </resources>
