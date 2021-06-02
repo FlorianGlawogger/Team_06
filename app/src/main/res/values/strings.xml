@@ -102,6 +102,7 @@
     <string name="action_save_task">Save Task</string>
     <string name="save_template">Save Template</string>
     <string name="template_exists_toast">Task template already exists</string>
-    <string name="menu_item_template">Template</string>
+    <string name="menu_item_template">New Template</string>
+    <string name="delete_template">Delete Template</string>
 
 </resources>
