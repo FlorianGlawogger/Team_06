@@ -27,8 +27,8 @@ class TaskTemplateInstrumentedTest {
     private val navigator = NavigationUtil()
     private val user = LoggedInUser("dggkbNlMM7QqSWjj8Nii")
     private val targetContext = InstrumentationRegistry.getInstrumentation().targetContext
-    private val taskName = "TestTaskname"
-    private val taskDescription = "TestTaskDescription"
+    private val taskName = "Test Taskname"
+    private val taskDescription = "Test Task Description"
     private val templateName = "TestTemplate"
 
     @Before
